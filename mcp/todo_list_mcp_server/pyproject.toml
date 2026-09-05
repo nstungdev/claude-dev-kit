@@ -1,0 +1,19 @@
+[project]
+name = "todo-list-mcp-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Son-Tung-Nguyen", email = "tung.sonnguyen@infodation.vn" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "mcp[cli]>=2.1.1",
+]
+
+[project.scripts]
+todo-list-mcp-server = "todo_list_mcp_server:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"

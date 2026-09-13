@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "mcp[cli]>=2.1.1",
+    "pydantic>=2.13.5",
 ]
 
 [project.scripts]
@@ -17,3 +18,8 @@ todo-list-mcp-server = "todo_list_mcp_server:main"
 [build-system]
 requires = ["uv_build>=0.12.10,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+]

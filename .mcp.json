@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "todo-list": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "P:/nstungdev/repos/claude-dev-kit/mcp/todo_list_mcp_server",
+        "todo-list-mcp-server"
+      ],
+      "env": {}
+    }
+  }
+}

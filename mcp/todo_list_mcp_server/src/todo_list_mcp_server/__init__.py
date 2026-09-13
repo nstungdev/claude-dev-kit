@@ -1,2 +1,5 @@
+from todo_list_mcp_server.server import mcp
+
+
 def main() -> None:
-    print("Hello from todo-list-mcp-server!")
+    mcp.run()

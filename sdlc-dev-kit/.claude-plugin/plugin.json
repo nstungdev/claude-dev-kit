@@ -1,0 +1,11 @@
+{
+  "name": "sdlc-dev-kit",
+  "displayName": "SDLC Dev Kit",
+  "description": "Spec-driven SDLC workflow skills for Claude Code: setup-dev-kit, generate-spec, generate-plan, generate-task, implement-task, inspect.",
+  "version": "0.1.0",
+  "author": { "name": "Son Tung Nguyen" },
+  "homepage": "https://github.com/nstungdev/claude-dev-kit",
+  "repository": "https://github.com/nstungdev/claude-dev-kit",
+  "license": "MIT",
+  "keywords": ["sdlc", "spec-driven", "tdd", "workflow"]
+}

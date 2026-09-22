@@ -46,6 +46,10 @@ doesn't have to guess intent>
 
 **Status:** Backlog
 
+**Rejection reason (if any):** <Only fill in when Status = Rejected.
+State exactly which criterion failed, or which AD/spec was violated.
+Leave empty if never Rejected.>
+
 ---
 
 ## T2: <Name of this unit of work>
@@ -60,3 +64,5 @@ doesn't have to guess intent>
 - [ ] <...>
 
 **Status:** Backlog
+
+**Rejection reason (if any):** <...>

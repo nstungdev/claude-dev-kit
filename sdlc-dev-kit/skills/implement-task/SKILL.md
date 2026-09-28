@@ -1,28 +1,42 @@
 ---
 name: implement-task
-description: Implements one specific task from tasks-XXX.md following TDD (RED-GREEN-REFACTOR) — writes tests first based on Acceptance Criteria, then codes until they pass, following the architecture in plan-XXX.md and the requirement in spec.md. Use when asked to code a task, implement a task, start work on a unit of work, or run implement-task.
+description: Implements every pending task in tasks-XXX.md in a loop — TDD (RED-GREEN-REFACTOR) per task, then automatically runs inspect; on Done it moves straight to the next eligible task without waiting for the user, on Rejected it stops and hands the decision back. Use when asked to code a task, implement a task, implement all tasks, start work on a unit of work, or run implement-task.
 ---
 
 # implement-task
 
 **What is this skill?**
 
-This skill acts as the "builder" — it takes exactly one task at `Backlog`
-status from `tasks-XXX.md` and implements it using mandatory TDD: tests
-are written before any implementation code, letting the tests drive the
-implementation, following the architecture defined in `plan-XXX.md` and
-the intent of the Requirement in `spec.md`. It never expands scope on its
-own and never edits spec/plan/architecture directly. A task is only
-considered ready for review once the build and all tests PASS.
+This skill acts as the "builder" and drives the implement→inspect loop
+over `tasks-XXX.md` end to end. For each task at `Backlog` status it
+implements it using mandatory TDD — tests are written before any
+implementation code, letting the tests drive the implementation,
+following the architecture defined in `plan-XXX.md` and the intent of the
+Requirement in `spec.md` — and once build/tests PASS it automatically
+invokes `inspect` on that exact task in the same run, with no manual
+step in between. If `inspect` marks the task `Done`, this skill
+immediately moves on to the next eligible `Backlog` task and repeats the
+whole cycle, continuing autonomously until there is no eligible task
+left. If `inspect` marks a task `Rejected`, the loop STOPS at that task
+and hands the decision back to the user (see step 12) — it never expands
+scope on its own and never edits spec/plan/architecture directly.
 
 **Exception:** CONFIG/documentation-only tasks (no code logic) do not go
 through the TDD cycle — see step 5 for how these are handled instead.
 
 **How does this skill work?**
 
-1. Identify the task to implement (by ID, e.g. "implement T2"). If
-   unclear, ask the user, or suggest the next valid task (Status =
-   `Backlog` and every task in its `Depends on` is already `Done`).
+1. Identify the task to implement:
+   - First iteration: use the task ID the user named (e.g. "implement
+     T2"). If none was named, or once picking up after a `Done` verdict
+     in step 11, pick the next valid task — Status = `Backlog` and every
+     task in its `Depends on` is already `Done`.
+   - If no eligible task remains anywhere in `tasks-XXX.md` → stop the
+     loop here, this is a normal end state (see step 12).
+   - If it's genuinely ambiguous which task to start with (e.g. several
+     independent Backlog tasks with no dependency between them and the
+     user gave no hint), ask the user once, then run the loop for the
+     rest without asking again.
 2. Check preconditions before starting:
    - If the task has a `Depends on` that is NOT yet `Done` → STOP, tell
      the user this task cannot start yet because its dependency isn't
@@ -84,7 +98,30 @@ through the TDD cycle — see step 5 for how these are handled instead.
      is outside this task's scope/authority) → STOP, report the specific
      failure to the user clearly, and do NOT move the task to review in
      a non-passing state.
-10. Only once build/tests PASS: stop, do NOT set the Status to `Done`
-    yourself (only `inspect` has that authority). Tell the user: the task
-    is implemented, build/tests pass, ready for review, and suggest
-    running `inspect` for this task.
+10. Only once build/tests PASS: do NOT set the Status to `Done` yourself
+    (only `inspect` has that authority) and do NOT stop to ask the user.
+    Immediately invoke the `inspect` skill for this exact task, in the
+    same run, passing it the task ID.
+11. Handle `inspect`'s verdict:
+    - **Done** → report a brief one-line progress note (e.g. "T2: Done"),
+      then go back to step 1 to pick up the next eligible `Backlog` task
+      automatically — no confirmation needed. Keep repeating steps 1-11
+      until step 1 finds no eligible task left.
+    - **Rejected** → STOP the loop right here (do not continue to other
+      tasks, even independent ones — a rejection can mean spec drift or
+      an architecture violation that needs a human decision, not just a
+      code fix). Go to step 12.
+12. When the loop stops, report clearly to the user:
+    - **All tasks Done** (step 1 found nothing left) → list every task
+      completed in this run; this is success, nothing more to do.
+    - **Stopped on a Rejected task** → name the task, quote the
+      Rejection reason `inspect` appended, list any tasks already marked
+      Done earlier in this run, and suggest the next step per the
+      `tasks-XXX.md` convention (create a new task, `Depends on:` the
+      rejected one, to fix it — never edit the rejected task itself).
+      Wait for the user's direction before touching that task further.
+    - **Stopped on an earlier hard blocker** (unclear Acceptance
+      Criteria, a missing technical decision, or a build/test failure
+      that couldn't be fixed after several attempts, per steps 4 and 9)
+      → report the specific blocker the same way, and do not silently
+      skip the task or move on to others that depend on it.

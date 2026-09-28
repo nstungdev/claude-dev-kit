@@ -34,13 +34,22 @@ infer the work of another skill.
 setup-dev-kit (run once)
         │
         ▼
-generate-spec → generate-plan → generate-task → implement-task → inspect
-        ▲                                                            │
-        └──────────────── new/changed requirement ───────────────────┘
+generate-spec → generate-plan → generate-task → implement-task
+        ▲                                              │
+        └──────────────── new/changed requirement ─────┘
 ```
 
-`implement-task` ↔ `inspect` repeats for each task (Rejected → fix →
-inspect again) until every task in `tasks-XXX.md` is `Done`.
+`implement-task` drives the rest of the loop on its own: for each task
+at `Backlog` status it does TDD, then automatically runs `inspect` on
+it — no manual step in between.
+
+- **Done** → commits that task on its own (one task = one commit, when
+  the project is a git repo) and moves straight to the next eligible
+  `Backlog` task, repeating until every task in `tasks-XXX.md` is `Done`.
+- **Rejected** → the loop stops right there and hands the decision back
+  to the user. Per the `tasks-XXX.md` convention, the rejected task is
+  never reopened — create a new task, `Depends on:` the rejected one, to
+  fix it, then resume `implement-task`.
 
 ## Skills
 
@@ -50,8 +59,8 @@ inspect again) until every task in `tasks-XXX.md` is `Done`.
 | [`generate-spec`](skills/generate-spec/SKILL.md) | A new requirement, or a change to an existing feature's requirement | A prompt, meeting notes, a document... | `docs/specs/<feature>/spec.md` + `CHANGELOG.md` (plus an empty `architecture.md` if the feature is brand new) |
 | [`generate-plan`](skills/generate-plan/SKILL.md) | After spec.md was just updated, need a technical approach | The most recent `CHANGELOG.md` entry without a plan yet | `plans/plan-XXX.md` |
 | [`generate-task`](skills/generate-task/SKILL.md) | After a plan exists, need concrete units of work to code | `plan-XXX.md` | `tasks/tasks-XXX.md` |
-| [`implement-task`](skills/implement-task/SKILL.md) | Code one specific task | A task at `Backlog` status | Code + passing tests (via TDD) |
-| [`inspect`](skills/inspect/SKILL.md) | Review one task that was just coded | The implemented task + the code diff | Task moves to `Done` or `Rejected` (with a reason) |
+| [`implement-task`](skills/implement-task/SKILL.md) | Implement every pending task, looping on its own | Every task at `Backlog` status in `tasks-XXX.md` | Code + passing tests (via TDD), auto-inspected and auto-committed per task until `Done` or a `Rejected`/blocker stops the loop |
+| [`inspect`](skills/inspect/SKILL.md) | Review one task — now invoked automatically by `implement-task` after each task | The implemented task + the code diff | Task moves to `Done` or `Rejected` (with a reason) |
 
 ## Files the kit creates in a project
 
@@ -76,9 +85,14 @@ inspect again) until every task in `tasks-XXX.md` is `Done`.
 1. Install `sdlc-dev-kit` for your project (see [Installation](#installation) below).
 2. Run `setup-dev-kit` — only once, when first adopting the kit.
 3. For each requirement → run `generate-spec` → `generate-plan` →
-   `generate-task` → `implement-task` → `inspect` per task, repeating
-   `implement-task`/`inspect` until every task in `tasks-XXX.md` is done.
-4. New or changed requirement → go back to `generate-spec`.
+   `generate-task` → `implement-task`. `implement-task` loops through
+   every task on its own (TDD → auto-`inspect` → auto-commit on `Done`)
+   until all tasks are `Done`, or it stops and reports back on a
+   `Rejected` task.
+4. If it stopped on a `Rejected` task → create a new task to fix it (per
+   the `tasks-XXX.md` convention), then run `implement-task` again to
+   resume the loop.
+5. New or changed requirement → go back to `generate-spec`.
 
 ## Hard rules
 
@@ -91,6 +105,11 @@ inspect again) until every task in `tasks-XXX.md` is `Done`.
   config/documentation-only tasks (no code logic).
 - `inspect` must re-read the full context from scratch (spec, plan,
   architecture, diff) — never rely on what it just remembers from coding.
+- `implement-task` never edits a `Rejected` task — it stops the loop and
+  waits for a new task (`Depends on:` the rejected one) to fix it.
+- One task = one commit: `implement-task` commits a `Done` task's changes
+  locally (when in a git repo) before moving on; it never pushes or
+  opens a PR on its own.
 
 ## Installation
 

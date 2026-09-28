@@ -1,6 +1,6 @@
 ---
 name: implement-task
-description: Implements every pending task in tasks-XXX.md in a loop — TDD (RED-GREEN-REFACTOR) per task, then automatically runs inspect; on Done it moves straight to the next eligible task without waiting for the user, on Rejected it stops and hands the decision back. Use when asked to code a task, implement a task, implement all tasks, start work on a unit of work, or run implement-task.
+description: Implements every pending task in tasks-XXX.md in a loop — TDD (RED-GREEN-REFACTOR) per task, then automatically runs inspect; on Done it commits that task's changes (one task = one commit, when in a git repo) and moves straight to the next eligible task without waiting for the user, on Rejected it stops and hands the decision back. Use when asked to code a task, implement a task, implement all tasks, start work on a unit of work, or run implement-task.
 ---
 
 # implement-task
@@ -14,12 +14,14 @@ implementation code, letting the tests drive the implementation,
 following the architecture defined in `plan-XXX.md` and the intent of the
 Requirement in `spec.md` — and once build/tests PASS it automatically
 invokes `inspect` on that exact task in the same run, with no manual
-step in between. If `inspect` marks the task `Done`, this skill
-immediately moves on to the next eligible `Backlog` task and repeats the
-whole cycle, continuing autonomously until there is no eligible task
-left. If `inspect` marks a task `Rejected`, the loop STOPS at that task
-and hands the decision back to the user (see step 12) — it never expands
-scope on its own and never edits spec/plan/architecture directly.
+step in between. If `inspect` marks the task `Done`, this skill commits
+that task's changes on its own — one task = one commit, when the project
+is a git repository (see step 12) — then immediately moves on to the
+next eligible `Backlog` task and repeats the whole cycle, continuing
+autonomously until there is no eligible task left. If `inspect` marks a
+task `Rejected`, the loop STOPS at that task and hands the decision back
+to the user (see step 13) — it never expands scope on its own and never
+edits spec/plan/architecture directly.
 
 **Exception:** CONFIG/documentation-only tasks (no code logic) do not go
 through the TDD cycle — see step 5 for how these are handled instead.
@@ -32,7 +34,7 @@ through the TDD cycle — see step 5 for how these are handled instead.
      in step 11, pick the next valid task — Status = `Backlog` and every
      task in its `Depends on` is already `Done`.
    - If no eligible task remains anywhere in `tasks-XXX.md` → stop the
-     loop here, this is a normal end state (see step 12).
+     loop here, this is a normal end state (see step 13).
    - If it's genuinely ambiguous which task to start with (e.g. several
      independent Backlog tasks with no dependency between them and the
      user gave no hint), ask the user once, then run the loop for the
@@ -103,15 +105,34 @@ through the TDD cycle — see step 5 for how these are handled instead.
     Immediately invoke the `inspect` skill for this exact task, in the
     same run, passing it the task ID.
 11. Handle `inspect`'s verdict:
-    - **Done** → report a brief one-line progress note (e.g. "T2: Done"),
-      then go back to step 1 to pick up the next eligible `Backlog` task
-      automatically — no confirmation needed. Keep repeating steps 1-11
-      until step 1 finds no eligible task left.
-    - **Rejected** → STOP the loop right here (do not continue to other
-      tasks, even independent ones — a rejection can mean spec drift or
-      an architecture violation that needs a human decision, not just a
-      code fix). Go to step 12.
-12. When the loop stops, report clearly to the user:
+    - **Done** → go to step 12 (commit), then report a brief one-line
+      progress note (e.g. "T2: Done"), then go back to step 1 to pick up
+      the next eligible `Backlog` task automatically — no confirmation
+      needed. Keep repeating steps 1-12 until step 1 finds no eligible
+      task left.
+    - **Rejected** → skip step 12 (nothing to commit), STOP the loop
+      right here (do not continue to other tasks, even independent ones
+      — a rejection can mean spec drift or an architecture violation
+      that needs a human decision, not just a code fix). Go to step 13.
+12. One task = one commit. Check whether the project is a git repository
+    (e.g. `git rev-parse --is-inside-work-tree`):
+    - Not a git repo → skip this step silently, nothing to do.
+    - Is a git repo → create exactly ONE commit for this task now, before
+      moving on to the next one:
+      - Stage only the files THIS task touched — the implementation
+        code, its tests, and the `Status: Done` update to `tasks-XXX.md`
+        for this task. Never `git add -A`/`git add .` blindly; check
+        `git status`/`git diff` first so unrelated pending changes (from
+        another task, or already present before this loop started) don't
+        get swept into this commit.
+      - Write a concise commit message referencing the Task ID and its
+        Related Requirement ID (e.g. "T2: <task summary> (REQ-01)"),
+        following the project's own commit convention if one is
+        documented in `docs/architecture.md`/`CLAUDE.md`.
+      - Do NOT push, open a PR, or amend a previous commit — this step
+        is a local commit only; publishing is a separate, explicit
+        action outside this loop.
+13. When the loop stops, report clearly to the user:
     - **All tasks Done** (step 1 found nothing left) → list every task
       completed in this run; this is success, nothing more to do.
     - **Stopped on a Rejected task** → name the task, quote the

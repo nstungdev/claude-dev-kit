@@ -6,7 +6,7 @@
       "name": "sdlc-dev-kit",
       "source": "./sdlc-dev-kit",
       "description": "Spec-driven SDLC workflow skills for Claude Code.",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

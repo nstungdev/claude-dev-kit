@@ -7,6 +7,12 @@
       "source": "./sdlc-dev-kit",
       "description": "Spec-driven SDLC workflow skills for Claude Code.",
       "version": "0.2.0"
+    },
+    {
+      "name": "engineering-kit",
+      "source": "./engineering-kit",
+      "description": "Everyday engineering skills for Claude Code, starting with a project-aware code review.",
+      "version": "0.1.0"
     }
   ]
 }

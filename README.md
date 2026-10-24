@@ -9,6 +9,7 @@ more structured and repeatable.
 | Resource | Description |
 |---|---|
 | [`sdlc-dev-kit/`](sdlc-dev-kit/README.md) | Claude Code Skills implementing a spec-driven SDLC workflow — `setup-dev-kit` → `generate-spec` → `generate-plan` → `generate-task` → `implement-task` → `inspect` — with mandatory TDD and an independent review gate before any task counts as done. Packaged as an installable Claude Code plugin. |
+| [`engineering-kit/`](engineering-kit/README.md) | Everyday engineering skills that work on any git repo. Starts with `review-changes`: a code review that interviews the coder about intent, then checks the diff against the repo's own conventions and business invariants. Packaged as an installable Claude Code plugin. |
 | [`mcp/todo_list_mcp_server/`](mcp/todo_list_mcp_server/README.md) | A Python MCP server for managing a local todo list (add/list/complete/update/delete), backed by a local JSON file. README in Vietnamese. |
 
 ## Installing the plugins
@@ -19,6 +20,7 @@ This repo also doubles as a Claude Code plugin marketplace
 ```bash
 /plugin marketplace add nstungdev/claude-dev-kit
 /plugin install sdlc-dev-kit@claude-dev-kit
+/plugin install engineering-kit@claude-dev-kit
 ```
 
 ## License

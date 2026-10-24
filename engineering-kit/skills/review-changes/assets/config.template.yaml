@@ -1,0 +1,81 @@
+# Cấu hình review-changes cho repo này.
+# Sinh bởi `/review-changes setup`. Commit thư mục .claude/review-changes/ để cả team dùng chung.
+# Mọi đường dẫn file rule đều tương đối so với thư mục chứa file này.
+
+# Phiên bản schema. Skill so giá trị này với template để biết config có cần cập nhật không.
+version: 1
+
+review:
+  # uncommitted: thay đổi chưa commit (kể cả file chưa track)
+  # branch: toàn bộ branch hiện tại so với base_branch
+  default_range: uncommitted
+  # Nên là ref remote (origin/<tên>) để không so với bản local đã cũ.
+  base_branch: origin/main
+  # Glob loại khỏi review: build output, dependency, file generated, lock file.
+  exclude:
+    - "**/bin/**"
+    - "**/obj/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/*.Designer.cs"
+    - "**/package-lock.json"
+  # Vượt ngưỡng thì hỏi coder thu hẹp phạm vi review.
+  max_files: 40
+  max_lines: 1500
+  # Vượt ngưỡng (và có từ 2 stage trở lên) thì chia stage cho subagent chạy song song.
+  subagent_threshold: 15
+  # Chạy commands.test của các stage bị ảnh hưởng khi review.
+  run_tests: true
+
+# Mỗi stage là một khối code có stack, rule và lệnh build riêng.
+# File được gán vào stage ĐẦU TIÊN có include khớp và exclude không khớp.
+stages:
+  - name: api
+    description: ".NET 8 Web API"
+    include:
+      - "src/Api/**"
+    exclude:
+      - "**/Migrations/*.Designer.cs"
+    rules: rules/api.md
+    # Lệnh chạy từ gốc repo. Để trống thì bỏ qua và báo "không cấu hình".
+    commands:
+      build: dotnet build src/Api/Api.sln
+      test: dotnet test src/Api/Api.sln --no-build
+
+  - name: portal
+    description: "Angular 17 SPA"
+    include:
+      - "src/Portal/**"
+    exclude: []
+    rules: rules/portal.md
+    commands:
+      build: npm --prefix src/Portal run build
+      test: npm --prefix src/Portal test -- --watch=false
+
+# Thuật ngữ và bất biến business, dùng chung cho mọi stage.
+domain_rules: rules/domain.md
+
+sources:
+  ticket:
+    # jira | linear | none
+    type: jira
+    # Regex tìm mã ticket trong tên branch và commit message.
+    pattern: "[A-Z][A-Z0-9]+-\\d+"
+    project_key: ABC
+  # Tài liệu tham khảo khi review. Bỏ trống nếu không dùng.
+  docs:
+    - type: confluence
+      space: ABC
+    - type: repo
+      path: docs/
+
+# report_only: chỉ báo cáo, coder tự sửa
+# fix_after_consent: Claude sửa các mục coder chọn sau báo cáo, không bao giờ commit
+fix_policy: report_only
+
+report:
+  # vi | en
+  language: vi
+  # true: ghi thêm báo cáo ra file ngoài việc trả trong chat
+  save: false
+  dir: reports/code-review

@@ -1,0 +1,11 @@
+{
+  "name": "engineering-kit",
+  "displayName": "Engineering Kit",
+  "description": "Everyday engineering skills for Claude Code: review-changes.",
+  "version": "0.1.0",
+  "author": { "name": "Son Tung Nguyen" },
+  "homepage": "https://github.com/nstungdev/claude-dev-kit",
+  "repository": "https://github.com/nstungdev/claude-dev-kit",
+  "license": "MIT",
+  "keywords": ["code-review", "engineering", "conventions"]
+}
